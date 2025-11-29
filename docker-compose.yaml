@@ -1,0 +1,85 @@
+services:
+  db:
+    image: mysql:9.3.0
+    environment:
+      MYSQL_ROOT_PASSWORD: very-strong-root-pw1111
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - ./containers_data/mysql_data:/var/lib/mysql
+      - ./dump.sql.gz:/docker-entrypoint-initdb.d/dump.sql.gz
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 100
+      start_period: 20s
+    restart: unless-stopped
+
+  generator:
+    build:
+      context: ./CompPrehension
+      dockerfile: server-bg.Dockerfile
+    restart: unless-stopped
+    environment:
+      SPRING_APPLICATION_NAME: "compph-bg"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://db/${DB_NAME}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+      TASK_GENERATION_CRON-SCHEDULE: "*/30 * * * * *"
+
+      TASK_GENERATION_TASKS_0_ENABLED: true
+      TASK_GENERATION_TASKS_0_RUN_MODE: incremental
+      TASK_GENERATION_TASKS_0_DOMAIN_SHORT_NAME: expression_dt
+
+      TASK_GENERATION_TASKS_0_CLEANUP_MODE_0: CleanupDownloadedOlderThan(1, HOURS)
+      TASK_GENERATION_TASKS_0_CLEANUP_MODE_1: CleanupParsed
+      TASK_GENERATION_TASKS_0_CLEANUP_MODE_2: CleanupGenerated
+
+      TASK_GENERATION_TASKS_0_SEARCHER_REPOSITORIES_TO_DOWNLOAD: 1
+      TASK_GENERATION_TASKS_0_SEARCHER_GITHUB_O_AUTH_TOKEN: ${GITHUB_API_TOKEN}
+      TASK_GENERATION_TASKS_0_SEARCHER_OUTPUT_FOLDER_PATH: /searched-repos
+      
+      TASK_GENERATION_TASKS_0_PARSER_OUTPUT_FOLDER_PATH: /parsed-questions
+      TASK_GENERATION_TASKS_0_PARSER_PATH_TO_EXECUTABLE: /parser/runner.sh  # TODO USE env from container
+      TASK_GENERATION_PARSER_LOG_LEVEL: WARN
+      
+      TASK_GENERATION_TASKS_0_GENERATOR_OUTPUT_FOLDER_PATH: /generated-questions
+      TASK_GENERATION_TASKS_0_GENERATOR_PATH_TO_EXECUTABLE: /generator/runner.sh # TODO USE env from container
+      TASK_GENERATION_GENERATOR_LOG_LEVEL: WARN
+    volumes:
+      - ./containers_data/searched-repos:/searched-repos
+      - ./containers_data/parsed-questions:/parsed-questions
+      - ./containers_data/generated-questions:/generated-questions
+    depends_on:
+      db:
+        condition: service_healthy
+
+  its:
+    build:
+      context: ./CompPrehension
+      dockerfile: server-bg.Dockerfile
+    environment:
+      SPRING_APPLICATION_NAME: "compph-app"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://db/${DB_NAME}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true"
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+      BANK-LOAD-TESTING_CRON_SCHEDULE: ${TUTOR_RUN_SCHEDULE:-once}
+      BANK-LOAD-TESTING_EXERCISE_ID: ${TUTOR_EXERCISE_ID:-29}
+      BANK-LOAD-TESTING_USERS_COUNT: ${TUTOR_USERS_COUNT:-10}
+      BANK-LOAD-TESTING_EXERCISE_START_DELAY_MIN: ${TUTOR_EXERCISE_START_DELAY_MIN:-0}
+      BANK-LOAD-TESTING_EXERCISE_START_DELAY_MAX: ${TUTOR_EXERCISE_START_DELAY_MAX:-30}
+      BANK-LOAD-TESTING_QUESTION_DURATION_MIN: ${TUTOR_QUESTION_DURATION_MIN:-20}
+      BANK-LOAD-TESTING_QUESTION_DURATION_MAX: ${TUTOR_QUESTION_DURATION_MAX:-60}
+      BANK-LOAD-TESTING_POST_QUESTION_DELAY_MIN: ${TUTOR_POST_QUESTION_DELAY_MIN:-3}
+      BANK-LOAD-TESTING_POST_QUESTION_DELAY_MAX: ${TUTOR_POST_QUESTION_DELAY_MAX:-10}
+    depends_on:
+      db:
+        condition: service_healthy
+      generator:
+        condition: service_started

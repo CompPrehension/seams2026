@@ -1,0 +1,3 @@
+[submodule "CompPrehension"]
+	path = CompPrehension
+	url = https://github.com/CompPrehension/CompPrehension.git
