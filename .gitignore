@@ -8,6 +8,7 @@ modules/expr-domain-question-generator/dependency-reduced-pom.xml
 /generator_py/
 *.env
 containers_data/**
+logs/**
 
 ### STS ###
 .apt_generated
