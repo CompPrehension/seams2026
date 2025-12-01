@@ -68,6 +68,7 @@ services:
     build:
       context: ./CompPrehension
       dockerfile: server-bg.Dockerfile
+    restart: unless-stopped
     environment:
       SPRING_APPLICATION_NAME: "its"
       SPRING_DATASOURCE_URL: "jdbc:mysql://db/${DB_NAME}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true"

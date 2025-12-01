@@ -6,13 +6,18 @@ This repository provides Docker Compose artifacts to reproduce experiments from 
 
 The setup launches three containers:
 
-- **database**: MySQL 9.3.0 instance with experiment data loaded from `dump.sql.gz`.
-- **generator**: Question generation application that monitors the generation requests queue and generates questions if needed.
-- **its**: Application to emulate student interactions with the tutoring system to load-test the question bank. Defaults to 10 users on exercise ID 29 (25 questions, ~30s solve time per question with randomization).
+- **database**: MySQL 9.3.0 instance with pre-populated problem bank from `dump.sql.gz`.
+- **generator**: Problem-generation application that monitors the generation requests queue and generates problems when needed.
+- **its**: Application that emulates student interactions with the tutoring system to load-test the problem bank.
+
+By default the `its`application starts a debug exercise emulation with 10 users (25 questions per exercise, ~30s solve time per question, with randomization). You can customize run settings using the .env file (see configuration section below).
+
+All meaningful logs are written to the `./logs` folder. 
+
 
 ## Prerequisites
 
-- Linux operating system or Windows with WSL2.
+- Linux or Windows with WSL2.
 - Docker with Compose plugin.
 - GitHub Personal Access Token with repository contents read permissions.
 
@@ -40,7 +45,7 @@ The setup launches three containers:
 
 3. Create `.env` file from `.env.example`
     
-   On Linux or Windows WSL2:
+   On Linux or WSL2:
    ```
    cp .env.example .env
    ```
@@ -57,11 +62,12 @@ The setup launches three containers:
    GITHUB_API_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
    ```
 
-   Other settings use sensible defaults but can be adjusted for tutor emulation:
+   Other settings use prepared defaults but can be adjusted for tutor emulation:
 
    | Variable                        | Description                                      | Default |
    |---------------------------------|--------------------------------------------------|---------|
    | `TUTOR_RUN_SCHEDULE`            | Cron schedule or "once" for single simulation    | once   |
+   | `TUTOR_GENERATOR_THRESHOLD`     | Minimum number of top-rated problems in the bank that triggers generation requests | 42  |
    | `TUTOR_USERS_COUNT`             | Number of simultaneous users                     | 10     |
    | `TUTOR_EXERCISE_START_DELAY_MIN`| Min random delay before exercise start (seconds) | 0      |
    | `TUTOR_EXERCISE_START_DELAY_MAX`| Max random delay before exercise start (seconds) | 30     |
@@ -70,7 +76,7 @@ The setup launches three containers:
    | `TUTOR_POST_QUESTION_DELAY_MIN` | Min post-question delay (seconds)                | 3      |
    | `TUTOR_POST_QUESTION_DELAY_MAX` | Max post-question delay (seconds)                | 10     |
 
-   Database settings (do not change unless needed):
+   Other settings (do not change unless needed):
 
    | Variable     | Default     |
    |--------------|-------------|
@@ -79,11 +85,14 @@ The setup launches three containers:
    | `DB_PASSWORD`| p@ssw0rd   |
    | `DB_PORT`    | 3306       |
    | `TUTOR_EXERCISE_ID` | 29 |
+   | `LOG_FILE_TEMPLATE` | full_log.log |
+   | `RANDOM_SEED` | |
 
 4. Start the services:
 
    ```
-   docker compose up -d
+   docker compose up
    ```
 
-   The first run builds images and initializes the database, which takes several minutes. Services include health checks and startup dependencies. Monitor with `docker compose logs -f`. All containers data persists in `./containers_data`; delete its contents for a clean rerun if needed.
+   The first run builds images and initializes the database, which takes several minutes. All containers data persists in `./containers_data`. All meaningful logs writes to `./logs` directory.
+   Delete contents from  `./containers_data` and `./logs` for a clean rerun if needed.
