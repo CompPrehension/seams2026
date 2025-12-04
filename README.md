@@ -64,29 +64,29 @@ All meaningful logs are written to the `./logs` folder.
 
    Other settings use prepared defaults but can be adjusted for tutor emulation:
 
-   | Variable                        | Description                                      | Default |
-   |---------------------------------|--------------------------------------------------|---------|
-   | `TUTOR_RUN_SCHEDULE`            | Cron schedule or "once" for single simulation    | once   |
-   | `TUTOR_GENERATOR_THRESHOLD`     | Minimum number of top-rated problems in the bank that triggers generation requests | 42  |
-   | `TUTOR_USERS_COUNT`             | Number of simultaneous users                     | 10     |
-   | `TUTOR_EXERCISE_START_DELAY_MIN`| Min random delay before exercise start (seconds) | 0      |
-   | `TUTOR_EXERCISE_START_DELAY_MAX`| Max random delay before exercise start (seconds) | 30     |
-   | `TUTOR_QUESTION_DURATION_MIN`   | Min question solve time (seconds)                | 20     |
-   | `TUTOR_QUESTION_DURATION_MAX`   | Max question solve time (seconds)                | 60     |
-   | `TUTOR_POST_QUESTION_DELAY_MIN` | Min post-question delay (seconds)                | 3      |
-   | `TUTOR_POST_QUESTION_DELAY_MAX` | Max post-question delay (seconds)                | 10     |
+   | Variable | Description | Default |
+   | :-- | :-- | :-- |
+   | `TUTOR_RUN_SCHEDULE` | Cron schedule or "once" for single simulation | once |
+   | `TUTOR_INITIAL_DELAY` | Initial delay before simulation start (seconds) | 0 |
+   | `TUTOR_N_LEFT` | Generator threshold (min top-rated problems to trigger generation) | 42 |
+   | `TUTOR_N_GEN` | Number of problems to generate per generation request | 3 |
+   | `TUTOR_SKIP_DELAY_FOR_PROBLEMS_WITHOUT_GENERATION` | Skip delays for exercise problems not requiring generation | false |
+   | `TUTOR_USERS_COUNT` | Number of simultaneous users | 7 |
+   | `TUTOR_EXERCISE_START_DELAY_MIN` | Min random delay before exercise start (seconds) | 0 |
+   | `TUTOR_EXERCISE_START_DELAY_MAX` | Max random delay before exercise start (seconds) | 30 |
+   | `TUTOR_POST_PROBLEM_DELAY_MIN` | Min post-problem delay (seconds) | 3 |
+   | `TUTOR_POST_PROBLEM_DELAY_MAX` | Max post-problem delay (seconds) | 10 |
 
    Other settings (do not change unless needed):
 
-   | Variable     | Default     |
-   |--------------|-------------|
-   | `DB_NAME`    | compprehension |
-   | `DB_USER`    | user       |
-   | `DB_PASSWORD`| p@ssw0rd   |
-   | `DB_PORT`    | 3306       |
-   | `TUTOR_EXERCISE_ID` | 29 |
+   | Variable | Default |
+   | :-- | :-- |
+   | `DB_NAME` | compprehension |
+   | `DB_USER` | user |
+   | `DB_PASSWORD` | p@ssw0rd |
+   | `DB_PORT` | 3306 |
    | `LOG_FILE_TEMPLATE` | full_log.log |
-   | `RANDOM_SEED` | |
+   | `RANDOM_SEED` |  |
 
 4. Start the services:
 
@@ -95,4 +95,5 @@ All meaningful logs are written to the `./logs` folder.
    ```
 
    The first run builds images and initializes the database, which takes several minutes. All containers data persists in `./containers_data`. All meaningful logs writes to `./logs` directory.
+   To stop the services, run `Ctrl+C`.
    Delete contents from  `./containers_data` and `./logs` for a clean rerun if needed.
